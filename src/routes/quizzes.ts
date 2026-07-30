@@ -7,7 +7,7 @@ import { DocumentModel } from '../models/Document.js';
 
 const router = Router();
 
-router.use(requireAuth);
+// router.use(requireAuth);
 
 // @route   GET /api/v1/quizzes/document/:id
 // @desc    Get quiz for a document (generate if none exist)
