@@ -7,7 +7,7 @@ import { DocumentModel } from '../models/Document.js';
 
 const router = Router();
 
-router.use(requireAuth);
+// router.use(requireAuth);
 
 // @route   GET /api/v1/flashcards/document/:id
 // @desc    Get flashcards for a document (generate if none exist)
