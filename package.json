@@ -4,14 +4,15 @@
   "description": "Backend service for LearnFlow AI",
   "main": "dist/app.js",
   "scripts": {
-    "dev": "tsx watch src/app.ts",
+    "dev": "tsx watch src/server.ts",
     "build": "tsc",
-    "start": "node dist/app.js",
+    "start": "node dist/server.js",
     "lint": "eslint src/**/*.ts",
     "format": "prettier --write src/**/*.ts"
   },
   "dependencies": {
     "@google/genai": "^2.12.0",
+    "@vercel/node": "^5.8.26",
     "better-auth": "^1.1.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",

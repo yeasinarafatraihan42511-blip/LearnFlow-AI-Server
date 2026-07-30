@@ -23,6 +23,7 @@ router.post('/', upload.single('file'), async (req: AuthenticatedRequest, res: a
     }
 
     const { originalname, mimetype, buffer } = req.file;
+    const { customTitle } = req.body;
     const userId = req.user?.id;
 
     if (!userId) {
@@ -52,12 +53,16 @@ router.post('/', upload.single('file'), async (req: AuthenticatedRequest, res: a
     const insights = await generateInsights(rawText);
 
     // 3. Save Document to database
+    const documentTitle = customTitle && customTitle.trim()
+      ? customTitle.trim()
+      : originalname.replace(/\.[^/.]+$/, ''); // Strip file extension
+
     const document = new DocumentModel({
       userId: new mongoose.Types.ObjectId(userId),
-      title: originalname.replace(/\.[^/.]+$/, ''), // Strip file extension
+      title: documentTitle,
       fileName: originalname,
       fileType,
-      fileUrl: `memory://${originalname}`, // In-memory signifier
+      fileUrl: `memory://${originalname}`,
       rawText,
       summary: insights.summary,
       keyPoints: insights.keyPoints,
@@ -103,7 +108,7 @@ router.get('/', async (req: AuthenticatedRequest, res: any) => {
 });
 
 // @route   GET /api/v1/documents/:id
-// @desc    Get document details
+// @desc    Get document details (auto-heal failed summaries)
 router.get('/:id', async (req: AuthenticatedRequest, res: any) => {
   try {
     const userId = req.user?.id;
@@ -114,6 +119,15 @@ router.get('/:id', async (req: AuthenticatedRequest, res: any) => {
 
     if (!document) {
       return res.status(404).json({ success: false, message: 'Document not found' });
+    }
+
+    // Auto heal if summary failed on previous run
+    if (!document.summary || document.summary.includes('Failed') || !document.keyPoints || document.keyPoints.length === 0) {
+      console.log('🔄 Regenerating failed document insights...');
+      const insights = await generateInsights(document.rawText);
+      document.summary = insights.summary;
+      document.keyPoints = insights.keyPoints;
+      await document.save();
     }
 
     res.json({ success: true, data: document });
@@ -150,7 +164,7 @@ router.delete('/:id', async (req: AuthenticatedRequest, res: any) => {
 });
 
 // @route   GET /api/v1/documents/:id/insights
-// @desc    Regenerate insights if missing
+// @desc    Force regenerate insights
 router.get('/:id/insights', async (req: AuthenticatedRequest, res: any) => {
   try {
     const userId = req.user?.id;
@@ -163,12 +177,10 @@ router.get('/:id/insights', async (req: AuthenticatedRequest, res: any) => {
       return res.status(404).json({ success: false, message: 'Document not found' });
     }
 
-    if (!document.summary || document.summary.includes('Failed')) {
-      const insights = await generateInsights(document.rawText);
-      document.summary = insights.summary;
-      document.keyPoints = insights.keyPoints;
-      await document.save();
-    }
+    const insights = await generateInsights(document.rawText);
+    document.summary = insights.summary;
+    document.keyPoints = insights.keyPoints;
+    await document.save();
 
     res.json({
       success: true,

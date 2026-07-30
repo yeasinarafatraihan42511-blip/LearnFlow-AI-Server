@@ -55,10 +55,10 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   });
 });
 
-// Start Server
-const PORT = env.PORT;
-app.listen(PORT, () => {
-  console.log(`🚀 LearnFlow AI Backend running on http://localhost:${PORT} in ${env.NODE_ENV} mode`);
-});
+// // Start Server
+// const PORT = env.PORT;
+// app.listen(PORT, () => {
+//   console.log(`🚀 LearnFlow AI Backend running on http://localhost:${PORT} in ${env.NODE_ENV} mode`);
+// });
 
 export default app;
